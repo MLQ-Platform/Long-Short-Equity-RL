@@ -84,6 +84,10 @@ class DDPGTrainer:
         return torch.tensor(data).float()
 
     def train(self, verbose: bool = True, mlflow_run: str = None):
+        """
+        Train Loop
+        """
+
         steps = 0
         score = 0
 
@@ -162,6 +166,34 @@ class DDPGTrainer:
 
         if mlflow_run:
             mlflow.end_run()
+
+    def test(self) -> list[dict]:
+        """
+        Test Loop
+        """
+
+        results = []
+        self.actor.eval()
+
+        state = self.env.reset()
+
+        while True:
+            action = self.actor(self.to_tensor(state).unsqueeze(0))
+            action = action.detach().squeeze(0).numpy()
+
+            target_weight = action * state[:, 0] + (1 - action) * state[:, 1]
+            gap = target_weight - state[:, 1]
+
+            next_state, reward, done, info = self.env.execute(state, gap)
+            state = next_state
+
+            results.append(info)
+
+            if done:
+                break
+
+        self.actor.train()
+        return results
 
     def _update(
         self,
