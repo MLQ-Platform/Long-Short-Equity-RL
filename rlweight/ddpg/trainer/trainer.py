@@ -167,33 +167,46 @@ class DDPGTrainer:
         if mlflow_run:
             mlflow.end_run()
 
-    def test(self) -> list[dict]:
+    def test(self) -> np.ndarray:
         """
         Test Loop
         """
 
-        results = []
+        weights = []
+        changes = []
+        turnovers = []
+
         self.actor.eval()
 
         state = self.env.reset()
 
         while True:
+            # Optimal Action
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
-
+            # Target Weight
             target_weight = action * state[:, 0] + (1 - action) * state[:, 1]
             gap = target_weight - state[:, 1]
-
+            # Execution
             next_state, reward, done, info = self.env.execute(state, gap)
             state = next_state
 
-            results.append(info)
+            changes.append(info["pct"])
+            weights.append(info["weights"])
+            turnovers.append(info["turnover"])
 
             if done:
                 break
 
         self.actor.train()
-        return results
+
+        changes = np.array(changes)
+        weights = np.array(weights)
+        turnovers = np.array(turnovers)
+        # Portfolio Value
+        ret = np.sum(weights * changes, axis=1) - turnovers * self.config.fee
+        pv = 1 + np.cumsum(ret)
+        return pv
 
     def _update(
         self,
