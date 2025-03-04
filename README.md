@@ -1,1 +1,1 @@
-# Long-Short-Equity-RL
+# v1.0.2
