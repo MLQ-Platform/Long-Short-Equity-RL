@@ -70,26 +70,6 @@ class BCQTrainer:
     def to_tensor(data: np.ndarray) -> torch.Tensor:
         return torch.tensor(data).float()
 
-    def get_action(self, state: torch.Tensor) -> np.ndarray:
-        """
-        Get Action from Actor
-        """
-        with torch.no_grad():
-            # Action Generation
-            state = state.repeat(100, 1, 1)
-            actions = self.actor.decoder(state)
-            # Perturbation
-            pactions = self.perturbation(state, actions)
-            # Q-value
-            q1 = self.critic.q1(state, pactions)
-
-            # Greedy Action
-            ind = torch.argmax(q1, 0)
-            action = pactions[ind].squeeze()
-            # (num_tickers,)
-            action = action.numpy()
-            return action
-
     def train(self, verbose: bool = True, mlflow_run: str = None):
         """
         Train the Actor and Critic
@@ -156,6 +136,7 @@ class BCQTrainer:
             pactions = self.perturbation(s, actions)
 
             perturb_loss = -self.critic.q1(s, pactions).mean()
+
             self.perturb_optimizer.zero_grad()
             perturb_loss.backward()
             self.perturb_optimizer.step()
