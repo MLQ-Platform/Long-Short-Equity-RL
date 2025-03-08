@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rlweight"
-version = "1.2.5"
+version = "1.2.6"
 description = "Reinforcement Learning based Weight Optimizer"
 authors = ["Jason <eppioes@gmail.com>"]
 readme = "README.md"
