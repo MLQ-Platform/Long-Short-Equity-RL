@@ -15,8 +15,8 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(256, 64),
             nn.ReLU(),
-            nn.Linear(64, config.num_tickers),
-            nn.Tanh(),
+            nn.Linear(64, 1),
+            nn.Sigmoid(),
         )
 
     def forward(self, state: torch.Tensor):
@@ -25,5 +25,6 @@ class Actor(nn.Module):
         """
         phi = 0.05
         act = self.fc_module(state)
-        act = phi * act
+        act = 0.1 + phi * act
+        act = torch.clamp(act, min=0.0, max=0.2)
         return act

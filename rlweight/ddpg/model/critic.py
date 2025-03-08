@@ -14,12 +14,12 @@ class Critic(nn.Module):
         )
 
         self.action_fc = nn.Sequential(
-            nn.Linear(config.num_tickers, 64),
+            nn.Linear(1, 16),
             nn.ReLU(),
         )
 
         self.fc_module = nn.Sequential(
-            nn.Linear(64 + 64, 256),
+            nn.Linear(64 + 16, 256),
             nn.ReLU(),
             nn.Linear(256, 64),
             nn.ReLU(),
