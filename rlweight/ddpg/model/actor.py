@@ -21,11 +21,9 @@ class Actor(nn.Module):
 
     def forward(self, state: torch.Tensor):
         """
-        state: (num_batch, num_tickers, 2)
+        state: (num_batch, num_tickers)
         """
-
+        phi = 0.05
         act = self.fc_module(state)
-
-        # Scaling
-        act = act / torch.abs(act).sum(dim=1, keepdim=True)
+        act = phi * act
         return act

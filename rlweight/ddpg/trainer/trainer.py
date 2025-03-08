@@ -29,9 +29,7 @@ class TrainerConfig:
     batch_size: int
     tau: float
     fee: float
-    lam: float
     buffer_size: int
-    dropout_rate: float
     std_start: float
     std_end: float
 
@@ -51,27 +49,23 @@ class DDPGTrainer:
         self.actor = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
         # Critic
         self.critic = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
         # Target Networks
         self.actor_target = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
         self.critic_target = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
 
@@ -117,7 +111,6 @@ class DDPGTrainer:
 
         # (num_tickers, 2)
         obs = self.env.reset()
-        lam = self.config.lam
 
         while steps < self.config.total_steps:
             # (num_tickers,)
@@ -133,7 +126,7 @@ class DDPGTrainer:
             # -1 ~ 1로 바운드
             action = np.clip(action, -1, 1)
             # (num_tickers,)
-            target_weight = lam * action + (1 - lam) * holding_weight
+            target_weight = action + state
             # (num_tickers,)
             gap = target_weight - holding_weight
 
@@ -175,7 +168,7 @@ class DDPGTrainer:
             steps += 1
 
             if done:
-                state = self.env.reset()
+                obs = self.env.reset()
 
             if verbose and steps % 100 == 0:
                 print(f"\n[Step {steps}/{self.config.total_steps}]")
@@ -200,7 +193,7 @@ class DDPGTrainer:
         self.actor.eval()
 
         obs = self.env.reset()
-        lam = self.config.lam
+
         while True:
             # (num_tickers,)
             state = obs[:, 0]
@@ -210,7 +203,7 @@ class DDPGTrainer:
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
             # Target Weight
-            target_weight = lam * action + (1 - lam) * holding_weight
+            target_weight = action + state
             gap = target_weight - holding_weight
             # Execution
             next_obs, reward, done, info = self.env.execute(obs, gap)
