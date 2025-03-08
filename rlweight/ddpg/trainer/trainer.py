@@ -138,7 +138,7 @@ class DDPGTrainer:
             gap = target_weight - holding_weight
 
             # 환경 실행
-            next_obs, reward, done, info = self.env.execute(state, gap)
+            next_obs, reward, done, info = self.env.execute(obs, gap)
             next_state = next_obs[:, 0]
             holding_weight = next_obs[:, 1]
 
@@ -153,6 +153,7 @@ class DDPGTrainer:
 
             self.buffer.add(transition)
             score += 1e-4 * (reward.item() - score)
+            obs = next_obs
             state = next_state
 
             if len(self.buffer) >= self.config.batch_size:
