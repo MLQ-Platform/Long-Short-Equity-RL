@@ -13,8 +13,10 @@ class Actor(nn.Module):
         self.fc_module = nn.Sequential(
             nn.Linear(2 * config.num_tickers, 256),
             nn.ReLU(),
+            nn.Dropout(config.dropout_rate),
             nn.Linear(256, 64),
             nn.ReLU(),
+            nn.Dropout(config.dropout_rate),
             nn.Linear(64, 1),
             nn.Sigmoid(),
         )
