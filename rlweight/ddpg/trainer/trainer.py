@@ -29,6 +29,7 @@ class TrainerConfig:
     batch_size: int
     tau: float
     fee: float
+    lam: float
     buffer_size: int
     dropout_rate: float
     std_start: float
@@ -115,24 +116,31 @@ class DDPGTrainer:
             mlflow.log_params(self.config.__dict__)
 
         # (num_tickers, 2)
-        state = self.env.reset()
+        obs = self.env.reset()
+        lam = self.config.lam
+        # (num_tickers,)
+        state = obs[:, 0]
+        # (num_tickers,)
+        holding_weight = obs[:, 1]
 
         while steps < self.config.total_steps:
-            # (1, 1)
+            # (1, num_tickers)
             action = self.actor(self.to_tensor(state).unsqueeze(0))
-            # (1,)
+            # (1, num_tickers)
             action = action.detach().squeeze(0).numpy()
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
-            # 0 ~ 1로 바운드
-            action = np.clip(action, 0, 1)
+            # -1 ~ 1로 바운드
+            action = np.clip(action, -1, 1)
             # (num_tickers,)
-            target_weight = action * state[:, 0] + (1 - action) * state[:, 1]
+            target_weight = lam * action + (1 - lam) * holding_weight
             # (num_tickers,)
-            gap = target_weight - state[:, 1]
+            gap = target_weight - holding_weight
 
             # 환경 실행
-            next_state, reward, done, info = self.env.execute(state, gap)
+            next_obs, reward, done, info = self.env.execute(state, gap)
+            next_state = next_obs[:, 0]
+            holding_weight = next_obs[:, 1]
 
             # 배치 단위 트렌지션
             transition = (
