@@ -118,12 +118,12 @@ class DDPGTrainer:
         # (num_tickers, 2)
         obs = self.env.reset()
         lam = self.config.lam
-        # (num_tickers,)
-        state = obs[:, 0]
-        # (num_tickers,)
-        holding_weight = obs[:, 1]
 
         while steps < self.config.total_steps:
+            # (num_tickers,)
+            state = obs[:, 0]
+            # (num_tickers,)
+            holding_weight = obs[:, 1]
             # (1, num_tickers)
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             # (1, num_tickers)
@@ -140,7 +140,6 @@ class DDPGTrainer:
             # 환경 실행
             next_obs, reward, done, info = self.env.execute(obs, gap)
             next_state = next_obs[:, 0]
-            holding_weight = next_obs[:, 1]
 
             # 배치 단위 트렌지션
             transition = (
@@ -154,7 +153,6 @@ class DDPGTrainer:
             self.buffer.add(transition)
             score += 1e-4 * (reward.item() - score)
             obs = next_obs
-            state = next_state
 
             if len(self.buffer) >= self.config.batch_size:
                 sampled_data = self.buffer.sample(self.config.batch_size)
@@ -166,7 +164,6 @@ class DDPGTrainer:
                         {
                             **update_result,
                             "exploration_noise": self.std,
-                            "action": action.item(),
                             "score": score,
                         },
                         step=steps,
@@ -186,7 +183,6 @@ class DDPGTrainer:
                 print(f"  Actor Loss: {update_result['actor_loss']:.6f}")
                 print(f"  Avg Value: {update_result['avg_value']:.6f}")
                 print(f"  Exploration Noise: {self.std:.6f}")
-                print(f"  Action: {action.item():.6f}")
                 print(f"  Score: {score:.6f}")
 
         if mlflow_run:
@@ -203,18 +199,22 @@ class DDPGTrainer:
 
         self.actor.eval()
 
-        state = self.env.reset()
-
+        obs = self.env.reset()
+        lam = self.config.lam
         while True:
+            # (num_tickers,)
+            state = obs[:, 0]
+            # (num_tickers,)
+            holding_weight = obs[:, 1]
             # Optimal Action
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
             # Target Weight
-            target_weight = action * state[:, 0] + (1 - action) * state[:, 1]
-            gap = target_weight - state[:, 1]
+            target_weight = lam * action + (1 - lam) * holding_weight
+            gap = target_weight - holding_weight
             # Execution
-            next_state, reward, done, info = self.env.execute(state, gap)
-            state = next_state
+            next_obs, reward, done, info = self.env.execute(obs, gap)
+            obs = next_obs
 
             changes.append(info["pct"])
             weights.append(info["weights"])
