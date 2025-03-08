@@ -30,6 +30,7 @@ class TrainerConfig:
     tau: float
     fee: float
     buffer_size: int
+    dropout_rate: float
     std_start: float
     std_end: float
 
@@ -49,20 +50,35 @@ class DDPGTrainer:
         self.actor = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                dropout_rate=config.dropout_rate,
             )
         )
         # Critic
         self.critic = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                dropout_rate=config.dropout_rate,
             )
         )
         # Target Networks
-        self.actor_target = Actor(config)
-        self.critic_target = Critic(config)
+        self.actor_target = Actor(
+            config=ModelConfig(
+                num_tickers=config.num_tickers,
+                dropout_rate=config.dropout_rate,
+            )
+        )
+        self.critic_target = Critic(
+            config=ModelConfig(
+                num_tickers=config.num_tickers,
+                dropout_rate=config.dropout_rate,
+            )
+        )
 
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.critic_target.load_state_dict(self.critic.state_dict())
+
+        self.actor_target.eval()
+        self.critic_target.eval()
 
         # Optimizers
         self.actor_optimizer = Adam(self.actor.parameters(), lr=self.config.lr_actor)
