@@ -122,8 +122,8 @@ class DDPGTrainer:
             state = obs[:, 0]
             # Hashing
             self.simhash.add(state)
-            state = self.simhash.discretization(state)
             count = self.simhash.count(state)
+            state = self.simhash.discretization(state)
             # (num_tickers,)
             holding_weight = obs[:, 1]
             # (1, num_tickers)
