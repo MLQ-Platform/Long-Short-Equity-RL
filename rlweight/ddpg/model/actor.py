@@ -11,9 +11,9 @@ class Actor(nn.Module):
 
         # Fully Connected Layer
         self.fc_module = nn.Sequential(
-            nn.Linear(config.num_tickers, 256),
+            nn.Linear(config.num_tickers, 128),
             nn.ReLU(),
-            nn.Linear(256, 64),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 1),
             nn.Sigmoid(),

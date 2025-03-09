@@ -19,9 +19,9 @@ class Critic(nn.Module):
         )
 
         self.fc_module = nn.Sequential(
-            nn.Linear(64 + 16, 256),
+            nn.Linear(64 + 16, 128),
             nn.ReLU(),
-            nn.Linear(256, 64),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 1),
         )
