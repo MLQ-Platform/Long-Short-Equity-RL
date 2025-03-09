@@ -23,8 +23,5 @@ class Actor(nn.Module):
         """
         state: (num_batch, num_tickers)
         """
-        phi = 0.05
         act = self.fc_module(state)
-        act = 0.1 + phi * act
-        act = torch.clamp(act, min=0.0, max=0.2)
         return act
