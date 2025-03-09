@@ -135,7 +135,7 @@ class DDPGTrainer:
             # -1 ~ 1로 바운드
             action = np.clip(action, 0.0, 1.0)
             # (num_tickers,)
-            target_weight = action * state + (1 - action) * holding_weight
+            target_weight = action * obs[:, 0] + (1 - action) * holding_weight
             # (num_tickers,)
             gap = target_weight - holding_weight
 
@@ -213,7 +213,7 @@ class DDPGTrainer:
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
             # Target Weight
-            target_weight = action * state + (1 - action) * holding_weight
+            target_weight = action * obs[:, 0] + (1 - action) * holding_weight
             gap = target_weight - holding_weight
             # Execution
             next_obs, reward, done, info = self.env.execute(obs, gap)
