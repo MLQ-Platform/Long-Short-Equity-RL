@@ -11,7 +11,6 @@ from torch.nn import MSELoss
 # Model
 from rlweight.ddpg.model.actor import Actor
 from rlweight.ddpg.model.critic import Critic
-from rlweight.ddpg.model.simhash import SimHash
 from rlweight.ddpg.model.config import ModelConfig
 from rlweight.ddpg.trainer.buffer import ReplayBuffer
 
@@ -25,8 +24,6 @@ class TrainerConfig:
     lr_actor: float
     lr_critic: float
     gamma: float
-    hash_dim: int
-    hash_beta: float
     num_tickers: int
     total_steps: int
     batch_size: int
@@ -51,24 +48,24 @@ class DDPGTrainer:
         # Actor
         self.actor = Actor(
             config=ModelConfig(
-                num_tickers=config.hash_dim,
+                num_tickers=config.num_tickers,
             )
         )
         # Critic
         self.critic = Critic(
             config=ModelConfig(
-                num_tickers=config.hash_dim,
+                num_tickers=config.num_tickers,
             )
         )
         # Target Networks
         self.actor_target = Actor(
             config=ModelConfig(
-                num_tickers=config.hash_dim,
+                num_tickers=config.num_tickers,
             )
         )
         self.critic_target = Critic(
             config=ModelConfig(
-                num_tickers=config.hash_dim,
+                num_tickers=config.num_tickers,
             )
         )
 
@@ -92,8 +89,6 @@ class DDPGTrainer:
 
         # buffer
         self.buffer = ReplayBuffer(max_size=self.config.buffer_size)
-        # SimHash
-        self.simhash = SimHash(self.config.num_tickers, self.config.hash_dim)
 
     @staticmethod
     def to_tensor(data: np.ndarray) -> torch.Tensor:
@@ -120,10 +115,6 @@ class DDPGTrainer:
         while steps < self.config.total_steps:
             # (num_tickers,)
             state = obs[:, 0]
-            # Hashing
-            self.simhash.add(state)
-            count = self.simhash.count(state)
-            state = self.simhash.discretization(state)
             # (num_tickers,)
             holding_weight = obs[:, 1]
             # (1, num_tickers)
@@ -132,17 +123,14 @@ class DDPGTrainer:
             action = action.detach().squeeze(0).numpy()
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
-            # -1 ~ 1로 바운드
-            action = np.clip(action, 0.0, 1.0)
             # (num_tickers,)
-            target_weight = action * obs[:, 0] + (1 - action) * holding_weight
+            target_weight = obs[:, 0] + action
             # (num_tickers,)
             gap = target_weight - holding_weight
 
             # 환경 실행
             next_obs, reward, done, info = self.env.execute(obs, gap)
-            next_state = self.simhash.discretization(next_obs[:, 0])
-            reward += self.config.hash_beta / np.sqrt(count)
+            next_state = next_obs[:, 0]
 
             # 배치 단위 트렌지션
             transition = (
@@ -206,14 +194,14 @@ class DDPGTrainer:
 
         while True:
             # (num_tickers,)
-            state = self.simhash.discretization(obs[:, 0])
+            state = obs[:, 0]
             # (num_tickers,)
             holding_weight = obs[:, 1]
             # Optimal Action
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
             # Target Weight
-            target_weight = action * obs[:, 0] + (1 - action) * holding_weight
+            target_weight = obs[:, 0] + action
             gap = target_weight - holding_weight
             # Execution
             next_obs, reward, done, info = self.env.execute(obs, gap)

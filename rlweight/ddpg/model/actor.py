@@ -15,13 +15,13 @@ class Actor(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(64, 1),
-            nn.Sigmoid(),
+            nn.Linear(64, config.num_tickers),
+            nn.Tanh(),
         )
 
     def forward(self, state: torch.Tensor):
         """
         state: (num_batch, num_tickers)
         """
-        act = self.fc_module(state)
+        act = 0.03 * self.fc_module(state)
         return act
