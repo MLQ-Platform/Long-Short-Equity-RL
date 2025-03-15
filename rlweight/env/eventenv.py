@@ -36,22 +36,24 @@ class EventEnv:
         # (num_tickers, )
         target_weight = self.data.factor[self._index]
         # (num_tickers, )
+        target_vol = self.data.tarvol[self._index]
+        # (num_tickers, )
         holding_weight = np.zeros_like(target_weight, dtype=np.float32)
-        # (num_tickers, 2)
-        state = np.concatenate(
-            [target_weight[:, np.newaxis], holding_weight[:, np.newaxis]], axis=1
-        ).astype(np.float32)
-        return state
 
-    def execute(
-        self, state: np.ndarray, action: np.ndarray
-    ) -> Tuple[np.ndarray, float]:
+        obs = {
+            "target_vol": target_vol[:, np.newaxis].astype(np.float32),
+            "target_weight": target_weight[:, np.newaxis].astype(np.float32),
+            "holding_weight": holding_weight[:, np.newaxis].astype(np.float32),
+        }
+        return obs
+
+    def execute(self, obs: dict, action: np.ndarray) -> Tuple[dict, float]:
         """
-        state: (num_tickers, 2)
+        obs: (num_tickers, 3)
         action: (num_tickers,): weight gap
         """
         # (num_tickers,)
-        holding_weight = state[:, 1]
+        holding_weight = obs["holding_weight"]
         # (num_tickers,)
         weight = np.clip(holding_weight + action, -1.0, 1.0)
         # (num_tickers,)
@@ -59,31 +61,29 @@ class EventEnv:
 
         ret = np.sum(weight * pct)
 
-        sim = np.dot(weight, state[:, 0]) / (
-            np.linalg.norm(weight) * np.linalg.norm(state[:, 0]) + 1e-8
-        )
-
         turnover: float = np.sum(np.abs(weight - holding_weight))
         # (1,)
         reward: float = np.array([ret - turnover * self.config.fee], dtype=np.float32)
 
         self._index += 1
+        target_vol = self.data.tarvol[self._index]
         # (num_tickers,)
         target_weight = self.data.factor[self._index]
         # (num_tickers,)
         holding_weight = weight
-        # (num_tickers, 2)
-        next_state = np.concatenate(
-            [target_weight[:, np.newaxis], holding_weight[:, np.newaxis]], axis=1
-        ).astype(np.float32)
-        # (1,)
+        # (1, )
         done = np.array([self._index == len(self.data) - 1], dtype=np.float32)
+        # (num_tickers, 3)
+        next_obs = {
+            "target_vol": target_vol[:, np.newaxis].astype(np.float32),
+            "target_weight": target_weight[:, np.newaxis].astype(np.float32),
+            "holding_weight": holding_weight[:, np.newaxis].astype(np.float32),
+        }
 
         info = {
             "pct": pct,
             "ret": ret,
-            "sim": sim,
             "weights": weight,
             "turnover": turnover,
         }
-        return next_state, reward, done, info
+        return next_obs, reward, done, info

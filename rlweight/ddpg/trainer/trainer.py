@@ -114,9 +114,9 @@ class DDPGTrainer:
 
         while steps < self.config.total_steps:
             # (num_tickers,)
-            state = obs[:, 0]
+            state = obs["target_vol"]
             # (num_tickers,)
-            holding_weight = obs[:, 1]
+            holding_weight = obs["holding_weight"]
             # (1, num_tickers)
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             # (1, num_tickers)
@@ -124,13 +124,16 @@ class DDPGTrainer:
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
             # (num_tickers,)
-            target_weight = obs[:, 0] + action
+            target_weight = obs["target_weight"] + action
+            target_weight -= target_weight.mean(axis=0, keepdims=True)
+            target_weight /= np.abs(target_weight).sum(axis=0, keepdims=True)
+
             # (num_tickers,)
             gap = target_weight - holding_weight
 
             # 환경 실행
             next_obs, reward, done, info = self.env.execute(obs, gap)
-            next_state = next_obs[:, 0]
+            next_state = next_obs["target_vol"]
 
             # 배치 단위 트렌지션
             transition = (
@@ -194,14 +197,17 @@ class DDPGTrainer:
 
         while True:
             # (num_tickers,)
-            state = obs[:, 0]
+            state = obs["target_vol"]
             # (num_tickers,)
-            holding_weight = obs[:, 1]
+            holding_weight = obs["holding_weight"]
             # Optimal Action
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
             # Target Weight
-            target_weight = obs[:, 0] + action
+            target_weight = obs["target_weight"] + action
+            target_weight -= target_weight.mean(axis=0, keepdims=True)
+            target_weight /= np.abs(target_weight).sum(axis=0, keepdims=True)
+
             gap = target_weight - holding_weight
             # Execution
             next_obs, reward, done, info = self.env.execute(obs, gap)

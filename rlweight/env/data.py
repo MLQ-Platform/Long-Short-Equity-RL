@@ -9,6 +9,7 @@ class Data:
     index: pd.DatetimeIndex
     factor: np.ndarray
     change: np.ndarray
+    tarvol: np.ndarray
 
     def __len__(self):
         return len(self.index)
