@@ -41,9 +41,9 @@ class EventEnv:
         holding_weight = np.zeros_like(target_weight, dtype=np.float32)
 
         obs = {
-            "target_vol": target_vol[:, np.newaxis].astype(np.float32),
-            "target_weight": target_weight[:, np.newaxis].astype(np.float32),
-            "holding_weight": holding_weight[:, np.newaxis].astype(np.float32),
+            "target_vol": target_vol.astype(np.float32),
+            "target_weight": target_weight.astype(np.float32),
+            "holding_weight": holding_weight.astype(np.float32),
         }
         return obs
 
@@ -75,9 +75,9 @@ class EventEnv:
         done = np.array([self._index == len(self.data) - 1], dtype=np.float32)
         # (num_tickers, 3)
         next_obs = {
-            "target_vol": target_vol[:, np.newaxis].astype(np.float32),
-            "target_weight": target_weight[:, np.newaxis].astype(np.float32),
-            "holding_weight": holding_weight[:, np.newaxis].astype(np.float32),
+            "target_vol": target_vol.astype(np.float32),
+            "target_weight": target_weight.astype(np.float32),
+            "holding_weight": holding_weight.astype(np.float32),
         }
 
         info = {
