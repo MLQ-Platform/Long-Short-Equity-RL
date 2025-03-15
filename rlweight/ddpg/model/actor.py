@@ -23,5 +23,5 @@ class Actor(nn.Module):
         """
         state: (num_batch, num_tickers)
         """
-        act = 0.03 * self.fc_module(state)
+        act = 0.05 * self.fc_module(state)
         return act
