@@ -119,7 +119,7 @@ class DDPGTrainer:
             holding_weight = obs["holding_weight"]
             # (1, num_tickers)
             action = self.actor(self.to_tensor(state).unsqueeze(0))
-            # (1, num_tickers)
+            # (num_tickers, )
             action = action.detach().squeeze(0).numpy()
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
