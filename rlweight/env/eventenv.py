@@ -23,13 +23,6 @@ class EventEnv:
             "data_len": len(self.data),
         }
 
-    @staticmethod
-    def neutralize(weight: np.ndarray):
-        """
-        weight: (num_tickers,)
-        """
-        return (weight - weight.mean()) / np.sum(np.abs(weight) + 1e-5)
-
     def reset(self):
         self._index = 0
 
