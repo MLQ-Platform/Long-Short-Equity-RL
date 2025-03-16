@@ -22,7 +22,7 @@ class TrainerConfig:
     lr_critic: float
     lr_purturb: float
     action_scale: float
-    purturb_scale: float
+    perturb_scale: float
     total_steps: int
     batch_size: int
     gamma: float
@@ -41,7 +41,7 @@ class BCQTrainer:
             config=ModelConfig(
                 num_tickers=config.num_tickers,
                 action_scale=config.action_scale,
-                purturb_scale=config.purturb_scale,
+                perturb_scale=config.perturb_scale,
             )
         )
         # Critic
@@ -49,7 +49,7 @@ class BCQTrainer:
             config=ModelConfig(
                 num_tickers=config.num_tickers,
                 action_scale=config.action_scale,
-                purturb_scale=config.purturb_scale,
+                perturb_scale=config.perturb_scale,
             )
         )
         # Perturbation
@@ -57,7 +57,7 @@ class BCQTrainer:
             config=ModelConfig(
                 num_tickers=config.num_tickers,
                 action_scale=config.action_scale,
-                purturb_scale=config.purturb_scale,
+                perturb_scale=config.perturb_scale,
             )
         )
         # Target Networks
@@ -65,13 +65,13 @@ class BCQTrainer:
             config=ModelConfig(
                 num_tickers=config.num_tickers,
                 action_scale=config.action_scale,
-                purturb_scale=config.purturb_scale,
+                perturb_scale=config.perturb_scale,
             )
         )
         self.critic_target = Qnet(
             num_tickers=config.num_tickers,
             action_scale=config.action_scale,
-            purturb_scale=config.purturb_scale,
+            perturb_scale=config.perturb_scale,
         )
 
         self.purturb_target.load_state_dict(self.perturbation.state_dict())
