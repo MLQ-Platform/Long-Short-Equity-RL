@@ -23,5 +23,6 @@ class Actor(nn.Module):
         """
         state: (num_batch, num_tickers)
         """
+        # (num_batch, num_tickers)
         act = self.config.action_scale * self.fc_module(state)
         return act
