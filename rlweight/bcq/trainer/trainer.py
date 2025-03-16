@@ -141,7 +141,7 @@ class BCQTrainer:
             self.critic_optimizer.step()
 
             # Perturbation 업데이트
-            actions = self.actor.decoder(s).detach()
+            actions = self.actor.decoder(s)
             pactions = self.perturbation(s, actions)
 
             perturb_loss = -self.critic.q1(s, pactions).mean()
