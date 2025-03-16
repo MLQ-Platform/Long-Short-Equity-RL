@@ -69,9 +69,11 @@ class BCQTrainer:
             )
         )
         self.critic_target = Qnet(
-            num_tickers=config.num_tickers,
-            action_scale=config.action_scale,
-            perturb_scale=config.perturb_scale,
+            config=ModelConfig(
+                num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
+                perturb_scale=config.perturb_scale,
+            )
         )
 
         self.purturb_target.load_state_dict(self.perturbation.state_dict())
