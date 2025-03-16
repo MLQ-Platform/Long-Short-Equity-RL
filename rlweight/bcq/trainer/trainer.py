@@ -21,6 +21,7 @@ class TrainerConfig:
     lr_actor: float
     lr_critic: float
     lr_purturb: float
+    action_scale: float
     total_steps: int
     batch_size: int
     gamma: float
@@ -38,22 +39,30 @@ class BCQTrainer:
         self.actor = VAE(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
         # Critic
         self.critic = Qnet(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
         # Perturbation
         self.perturbation = Perturbation(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
         # Target Networks
-        self.purturb_target = Perturbation(config)
+        self.purturb_target = Perturbation(
+            config=ModelConfig(
+                num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
+            )
+        )
         self.critic_target = Qnet(config)
 
         self.purturb_target.load_state_dict(self.perturbation.state_dict())
