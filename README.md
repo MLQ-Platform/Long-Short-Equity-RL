@@ -1,6 +1,6 @@
 # rlweight
 
-Reinforcement Learning based Portfolio Weight Optimization Module.
+Reinforcement Learning based Portfolio Weight Control Module.
 
 
 ## Install
