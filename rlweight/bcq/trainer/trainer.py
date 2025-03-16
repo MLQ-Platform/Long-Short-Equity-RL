@@ -116,7 +116,7 @@ class BCQTrainer:
             # Soft CLipped Double Q-learning
             with torch.no_grad():
                 # 배치마다 100개 반복 생성
-                ns = torch.repeat_interleave(ns, 100, dim=0)
+                ns = torch.repeat_interleave(ns, 10, dim=0)
                 next_a = self.actor.decoder(ns)
                 next_pa = self.perturbation(ns, next_a)
                 next_q1 = self.critic.q1(ns, next_pa)
