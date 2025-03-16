@@ -23,6 +23,7 @@ from rlweight.env.eventenv import EventEnvConfig
 class TrainerConfig:
     lr_actor: float
     lr_critic: float
+    action_scale: float
     gamma: float
     num_tickers: int
     total_steps: int
@@ -49,23 +50,27 @@ class DDPGTrainer:
         self.actor = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
         # Critic
         self.critic = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
         # Target Networks
         self.actor_target = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
         self.critic_target = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
+                action_scale=config.action_scale,
             )
         )
 
@@ -109,7 +114,7 @@ class DDPGTrainer:
             mlflow.start_run(run_name=run_name)
             mlflow.log_params(self.config.__dict__)
 
-        # (num_tickers, 2)
+        # observation
         obs = self.env.reset()
 
         while steps < self.config.total_steps:
