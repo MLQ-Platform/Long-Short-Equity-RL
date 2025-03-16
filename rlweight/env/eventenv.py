@@ -24,6 +24,17 @@ class EventEnv:
         }
 
     def reset(self):
+        """
+        return initial observation
+
+        obs:
+            {
+                "target_vol": (num_tickers, ),
+                "target_weight": (num_tickers, ),
+                "holding_weight": (num_tickers, ),
+            }
+        """
+
         self._index = 0
 
         # (num_tickers, )
@@ -42,8 +53,24 @@ class EventEnv:
 
     def execute(self, obs: dict, action: np.ndarray) -> Tuple[dict, float]:
         """
-        obs: (num_tickers, 3)
-        action: (num_tickers,): weight gap
+        execute an action and return next observation, reward, done, info
+
+        next_obs:
+            {
+                "target_vol": (num_tickers, ),
+                "target_weight": (num_tickers, ),
+                "holding_weight": (num_tickers, ),
+            }
+
+        reward: (1,)
+        done: (1,)
+        info:
+            {
+                "pct": (1, ),
+                "ret": (1, ),
+                "weights": (num_tickers, ),
+                "turnover": (1, ),
+            }
         """
         # (num_tickers,)
         holding_weight = obs["holding_weight"]
@@ -51,9 +78,9 @@ class EventEnv:
         weight = np.clip(holding_weight + action, -1.0, 1.0)
         # (num_tickers,)
         pct = self.data.change[self._index]
-
+        # (1, )
         ret = np.sum(weight * pct)
-
+        # (1, )
         turnover: float = np.sum(np.abs(weight - holding_weight))
         # (1,)
         reward: float = np.array([ret - turnover * self.config.fee], dtype=np.float32)
@@ -66,8 +93,9 @@ class EventEnv:
         holding_weight = weight
         # (1, )
         done = np.array([self._index == len(self.data) - 1], dtype=np.float32)
-        # (num_tickers, 3)
+
         next_obs = {
+            # (num_tickers,)
             "target_vol": target_vol.astype(np.float32),
             "target_weight": target_weight.astype(np.float32),
             "holding_weight": holding_weight.astype(np.float32),
