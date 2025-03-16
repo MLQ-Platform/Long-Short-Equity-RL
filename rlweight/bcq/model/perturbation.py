@@ -33,7 +33,7 @@ class Perturbation(nn.Module):
         p = self.out(self.l3(x))
 
         # (batch, a_dim)
-        purturb = self.config.purturb_scale * p
+        perturb = self.config.perturb_scale * p
         # (batch, a_dim)
-        purturb_action = (action + purturb).clamp(-1.0, 1.0)
-        return purturb_action
+        perturb_action = (action + perturb).clamp(-1.0, 1.0)
+        return perturb_action
