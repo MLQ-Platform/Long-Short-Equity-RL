@@ -9,19 +9,19 @@ class Critic(nn.Module):
         self.config = config
 
         self.state_fc = nn.Sequential(
-            nn.Linear(2 * config.num_tickers, 64),
+            nn.Linear(config.num_tickers, 64),
             nn.ReLU(),
         )
 
         self.action_fc = nn.Sequential(
-            nn.Linear(1, 16),
+            nn.Linear(config.num_tickers, 64),
             nn.ReLU(),
         )
 
         self.fc_module = nn.Sequential(
-            nn.Linear(64 + 16, 256),
+            nn.Linear(64 + 64, 128),
             nn.ReLU(),
-            nn.Linear(256, 64),
+            nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, 1),
         )
@@ -31,13 +31,11 @@ class Critic(nn.Module):
         state: (batch, num_tickers, 2)
         action: (batch, num_tickers)
         """
-        # (batch, num_tickers * 2)
-        state_flat = state.reshape(state.size(0), -1)
         # (batch, 64)
-        state_emb = self.state_fc(state_flat)
-        # (batch, 16)
+        state_emb = self.state_fc(state)
+        # (batch, 64)
         action_emb = self.action_fc(action)
-        # (batch, 64 + 16)
+        # (batch, 64 + 64)
         q_input = torch.cat([state_emb, action_emb], dim=1)
         # (batch, 1)
         q_value = self.fc_module(q_input)

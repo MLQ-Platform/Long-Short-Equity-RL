@@ -11,24 +11,18 @@ class Actor(nn.Module):
 
         # Fully Connected Layer
         self.fc_module = nn.Sequential(
-            nn.Linear(2 * config.num_tickers, 256),
+            nn.Linear(config.num_tickers, 128),
             nn.ReLU(),
-            nn.Dropout(config.dropout_rate),
-            nn.Linear(256, 64),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Dropout(config.dropout_rate),
-            nn.Linear(64, 1),
-            nn.Sigmoid(),
+            nn.Linear(64, config.num_tickers),
+            nn.Tanh(),
         )
 
     def forward(self, state: torch.Tensor):
         """
-        state: (num_batch, num_tickers, 2)
+        state: (num_batch, num_tickers)
         """
-
-        # (batch, num_tickers, 2) -> (batch, num_tickers * 2)
-        state = state.reshape(state.size(0), -1)
-        # (batch, num_tickers * 2) -> (batch, 1)
-        act = self.fc_module(state)
-        # (batch, 1) -> (batch, num_tickers)
+        # (num_batch, num_tickers)
+        act = self.config.action_scale * self.fc_module(state)
         return act

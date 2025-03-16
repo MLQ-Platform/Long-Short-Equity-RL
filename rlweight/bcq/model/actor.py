@@ -11,11 +11,12 @@ class VAE(nn.Module):
     def __init__(self, config: ModelConfig):
         super(VAE, self).__init__()
 
-        s_dim = 2 * config.num_tickers
+        s_dim = config.num_tickers
         a_dim = config.num_tickers
         z_dim = a_dim * 2
 
         self.z_dim = z_dim
+        self.config = config
         self.act = nn.ReLU()
         self.out = nn.Tanh()
 
@@ -32,21 +33,16 @@ class VAE(nn.Module):
 
     def forward(self, state: torch.Tensor, action: torch.Tensor):
         """
-        state: (batch, num_tickers, 2)
+        state: (batch, num_tickers)
         action: (batch, num_tickers)
         """
-
-        # (batch, num_tickers, 2) -> (batch, num_tickers * 2)
-        state = state.reshape(state.size(0), -1)
 
         z, mean, std = self.encoder(state, action)
         a = self.decoder(state, z)
         return a, mean, std
 
     def encoder(self, state: torch.Tensor, action: torch.Tensor):
-        # (batch, num_tickers, 2) -> (batch, num_tickers * 2)
-        state = state.reshape(state.size(0), -1)
-        # (batch, num_tickers * 3)
+        # (batch, num_tickers * 2)
         x = torch.cat([state, action], 1)
         # (batch, 750)
         x = self.act(self.e1(x))
@@ -65,8 +61,6 @@ class VAE(nn.Module):
         return z, mean, std
 
     def decoder(self, state: torch.Tensor, z: torch.Tensor = None):
-        # (batch, num_tickers, 2) -> (batch, num_tickers * 2)
-        state = state.reshape(state.size(0), -1)
         # (batch, a_dim * 2)
         z_shape = (state.shape[0], self.z_dim)
         # (batch, a_dim * 2)
@@ -78,5 +72,5 @@ class VAE(nn.Module):
         # (batch, 750)
         x = self.act(self.d2(x))
         # (batch, a_dim)
-        action = self.out(self.d3(x))
+        action = self.config.action_scale * self.out(self.d3(x))
         return action

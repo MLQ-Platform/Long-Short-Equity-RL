@@ -30,7 +30,6 @@ class TrainerConfig:
     tau: float
     fee: float
     buffer_size: int
-    dropout_rate: float
     std_start: float
     std_end: float
 
@@ -50,27 +49,23 @@ class DDPGTrainer:
         self.actor = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
         # Critic
         self.critic = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
         # Target Networks
         self.actor_target = Actor(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
         self.critic_target = Critic(
             config=ModelConfig(
                 num_tickers=config.num_tickers,
-                dropout_rate=config.dropout_rate,
             )
         )
 
@@ -115,24 +110,30 @@ class DDPGTrainer:
             mlflow.log_params(self.config.__dict__)
 
         # (num_tickers, 2)
-        state = self.env.reset()
+        obs = self.env.reset()
 
         while steps < self.config.total_steps:
-            # (1, 1)
+            # (num_tickers,)
+            state = obs["target_vol"]
+            # (num_tickers,)
+            holding_weight = obs["holding_weight"]
+            # (1, num_tickers)
             action = self.actor(self.to_tensor(state).unsqueeze(0))
-            # (1,)
+            # (num_tickers, )
             action = action.detach().squeeze(0).numpy()
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
-            # 0 ~ 1로 바운드
-            action = np.clip(action, 0, 1)
             # (num_tickers,)
-            target_weight = action * state[:, 0] + (1 - action) * state[:, 1]
+            target_weight = obs["target_weight"] + action
+            target_weight -= target_weight.mean(axis=0, keepdims=True)
+            target_weight /= np.abs(target_weight).sum(axis=0, keepdims=True)
+
             # (num_tickers,)
-            gap = target_weight - state[:, 1]
+            gap = target_weight - holding_weight
 
             # 환경 실행
-            next_state, reward, done, info = self.env.execute(state, gap)
+            next_obs, reward, done, info = self.env.execute(obs, gap)
+            next_state = next_obs["target_vol"]
 
             # 배치 단위 트렌지션
             transition = (
@@ -145,7 +146,7 @@ class DDPGTrainer:
 
             self.buffer.add(transition)
             score += 1e-4 * (reward.item() - score)
-            state = next_state
+            obs = next_obs
 
             if len(self.buffer) >= self.config.batch_size:
                 sampled_data = self.buffer.sample(self.config.batch_size)
@@ -157,7 +158,6 @@ class DDPGTrainer:
                         {
                             **update_result,
                             "exploration_noise": self.std,
-                            "action": action.item(),
                             "score": score,
                         },
                         step=steps,
@@ -169,7 +169,7 @@ class DDPGTrainer:
             steps += 1
 
             if done:
-                state = self.env.reset()
+                obs = self.env.reset()
 
             if verbose and steps % 100 == 0:
                 print(f"\n[Step {steps}/{self.config.total_steps}]")
@@ -177,7 +177,6 @@ class DDPGTrainer:
                 print(f"  Actor Loss: {update_result['actor_loss']:.6f}")
                 print(f"  Avg Value: {update_result['avg_value']:.6f}")
                 print(f"  Exploration Noise: {self.std:.6f}")
-                print(f"  Action: {action.item():.6f}")
                 print(f"  Score: {score:.6f}")
 
         if mlflow_run:
@@ -194,18 +193,25 @@ class DDPGTrainer:
 
         self.actor.eval()
 
-        state = self.env.reset()
+        obs = self.env.reset()
 
         while True:
+            # (num_tickers,)
+            state = obs["target_vol"]
+            # (num_tickers,)
+            holding_weight = obs["holding_weight"]
             # Optimal Action
             action = self.actor(self.to_tensor(state).unsqueeze(0))
             action = action.detach().squeeze(0).numpy()
             # Target Weight
-            target_weight = action * state[:, 0] + (1 - action) * state[:, 1]
-            gap = target_weight - state[:, 1]
+            target_weight = obs["target_weight"] + action
+            target_weight -= target_weight.mean(axis=0, keepdims=True)
+            target_weight /= np.abs(target_weight).sum(axis=0, keepdims=True)
+
+            gap = target_weight - holding_weight
             # Execution
-            next_state, reward, done, info = self.env.execute(state, gap)
-            state = next_state
+            next_obs, reward, done, info = self.env.execute(obs, gap)
+            obs = next_obs
 
             changes.append(info["pct"])
             weights.append(info["weights"])

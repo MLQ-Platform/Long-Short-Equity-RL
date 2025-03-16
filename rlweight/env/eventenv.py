@@ -23,67 +23,88 @@ class EventEnv:
             "data_len": len(self.data),
         }
 
-    @staticmethod
-    def neutralize(weight: np.ndarray):
-        """
-        weight: (num_tickers,)
-        """
-        return (weight - weight.mean()) / np.sum(np.abs(weight) + 1e-5)
-
     def reset(self):
+        """
+        return initial observation
+
+        obs:
+            {
+                "target_vol": (num_tickers, ),
+                "target_weight": (num_tickers, ),
+                "holding_weight": (num_tickers, ),
+            }
+        """
+
         self._index = 0
 
         # (num_tickers, )
         target_weight = self.data.factor[self._index]
         # (num_tickers, )
+        target_vol = self.data.tarvol[self._index]
+        # (num_tickers, )
         holding_weight = np.zeros_like(target_weight, dtype=np.float32)
-        # (num_tickers, 2)
-        state = np.concatenate(
-            [target_weight[:, np.newaxis], holding_weight[:, np.newaxis]], axis=1
-        ).astype(np.float32)
-        return state
 
-    def execute(
-        self, state: np.ndarray, action: np.ndarray
-    ) -> Tuple[np.ndarray, float]:
+        obs = {
+            "target_vol": target_vol.astype(np.float32),
+            "target_weight": target_weight.astype(np.float32),
+            "holding_weight": holding_weight.astype(np.float32),
+        }
+        return obs
+
+    def execute(self, obs: dict, action: np.ndarray) -> Tuple[dict, float]:
         """
-        state: (num_tickers, 2)
-        action: (num_tickers,): weight gap
+        execute an action and return next observation, reward, done, info
+
+        next_obs:
+            {
+                "target_vol": (num_tickers, ),
+                "target_weight": (num_tickers, ),
+                "holding_weight": (num_tickers, ),
+            }
+
+        reward: (1,)
+        done: (1,)
+        info:
+            {
+                "pct": (1, ),
+                "ret": (1, ),
+                "weights": (num_tickers, ),
+                "turnover": (1, ),
+            }
         """
         # (num_tickers,)
-        holding_weight = state[:, 1]
+        holding_weight = obs["holding_weight"]
         # (num_tickers,)
         weight = np.clip(holding_weight + action, -1.0, 1.0)
         # (num_tickers,)
         pct = self.data.change[self._index]
-
+        # (1, )
         ret = np.sum(weight * pct)
-
-        sim = np.dot(weight, state[:, 0]) / (
-            np.linalg.norm(weight) * np.linalg.norm(state[:, 0]) + 1e-8
-        )
-
+        # (1, )
         turnover: float = np.sum(np.abs(weight - holding_weight))
         # (1,)
         reward: float = np.array([ret - turnover * self.config.fee], dtype=np.float32)
 
         self._index += 1
+        target_vol = self.data.tarvol[self._index]
         # (num_tickers,)
         target_weight = self.data.factor[self._index]
         # (num_tickers,)
         holding_weight = weight
-        # (num_tickers, 2)
-        next_state = np.concatenate(
-            [target_weight[:, np.newaxis], holding_weight[:, np.newaxis]], axis=1
-        ).astype(np.float32)
-        # (1,)
+        # (1, )
         done = np.array([self._index == len(self.data) - 1], dtype=np.float32)
+
+        next_obs = {
+            # (num_tickers,)
+            "target_vol": target_vol.astype(np.float32),
+            "target_weight": target_weight.astype(np.float32),
+            "holding_weight": holding_weight.astype(np.float32),
+        }
 
         info = {
             "pct": pct,
             "ret": ret,
-            "sim": sim,
             "weights": weight,
             "turnover": turnover,
         }
-        return next_state, reward, done, info
+        return next_obs, reward, done, info

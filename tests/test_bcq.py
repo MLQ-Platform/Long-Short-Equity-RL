@@ -10,12 +10,12 @@ def test_vae():
     """
     VAE feed-forward test
     """
-    NUM_TICKERS = 29
+    NUM_TICKERS = 20
 
     config = ModelConfig(num_tickers=NUM_TICKERS)
     vae = VAE(config)
 
-    state = torch.randn(1, NUM_TICKERS, 2)
+    state = torch.randn(1, NUM_TICKERS)
     action = torch.randn(1, NUM_TICKERS)
 
     z, mean, std = vae.encoder(state, action)
@@ -31,12 +31,12 @@ def test_qnet():
     """
     Qnet feed-forward test
     """
-    NUM_TICKERS = 29
+    NUM_TICKERS = 20
 
     config = ModelConfig(num_tickers=NUM_TICKERS)
     qnet = Qnet(config)
 
-    state = torch.randn(1, NUM_TICKERS, 2)
+    state = torch.randn(1, NUM_TICKERS)
     action = torch.randn(1, NUM_TICKERS)
 
     q1 = qnet.q1(state, action)
@@ -51,12 +51,12 @@ def test_perturbation():
     Perturbation feed-forward test
     """
 
-    NUM_TICKERS = 29
+    NUM_TICKERS = 20
 
     config = ModelConfig(num_tickers=NUM_TICKERS)
     perturbation = Perturbation(config)
 
-    state = torch.randn(1, NUM_TICKERS, 2)
+    state = torch.randn(1, NUM_TICKERS)
     action = torch.randn(1, NUM_TICKERS)
 
     purturb_action = perturbation(state, action)

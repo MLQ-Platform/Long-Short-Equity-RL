@@ -9,28 +9,28 @@ def test_actor():
     """
     DDPG Actor feed-forward test
     """
-    NUM_TICKERS = 29
+    NUM_TICKERS = 20
 
     config = ModelConfig(num_tickers=NUM_TICKERS)
     actor = Actor(config)
 
-    state = torch.randn(1, NUM_TICKERS, 2)
+    state = torch.randn(1, NUM_TICKERS)
     action = actor(state)
 
-    assert action.shape == (1, 1)
+    assert action.shape == (1, NUM_TICKERS)
 
 
 def test_critic():
     """
     DDPG Critic feed-forward test
     """
-    NUM_TICKERS = 29
+    NUM_TICKERS = 20
 
     config = ModelConfig(num_tickers=NUM_TICKERS)
     critic = Critic(config)
 
-    state = torch.randn(1, NUM_TICKERS, 2)
-    action = torch.randn(1, 1)
+    state = torch.randn(1, NUM_TICKERS)
+    action = torch.randn(1, NUM_TICKERS)
 
     q_value = critic(state, action)
 

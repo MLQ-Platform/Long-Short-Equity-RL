@@ -11,7 +11,7 @@ class Qnet(nn.Module):
     def __init__(self, config: ModelConfig):
         super(Qnet, self).__init__()
 
-        s_dim = 2 * config.num_tickers
+        s_dim = config.num_tickers
         a_dim = config.num_tickers
 
         self.config = config
@@ -38,12 +38,10 @@ class Qnet(nn.Module):
         """
         Q-value 1
 
-        state: (batch, num_tickers, 2)
+        state: (batch, num_tickers)
         action: (batch, num_tickers)
         """
-        # (batch, num_tickers, 2) -> (batch, num_tickers * 2)
-        state = state.reshape(state.size(0), -1)
-        # (batch, num_tickers * 3)
+        # (batch, num_tickers * 2)
         x = torch.cat([state, action], 1)
         # (batch, 1)
         q = self.qnet1(x)
@@ -56,9 +54,7 @@ class Qnet(nn.Module):
         state: (batch, num_tickers, 2)
         action: (batch, num_tickers)
         """
-        # (batch, num_tickers, 2) -> (batch, num_tickers * 2)
-        state = state.reshape(state.size(0), -1)
-        # (batch, num_tickers * 3)
+        # (batch, num_tickers * 2)
         x = torch.cat([state, action], 1)
         # (batch, 1)
         q = self.qnet2(x)
