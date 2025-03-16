@@ -99,6 +99,12 @@ class DDPGTrainer:
     def to_tensor(data: np.ndarray) -> torch.Tensor:
         return torch.tensor(data).float()
 
+    @staticmethod
+    def neutralize(weight: np.ndarray) -> np.ndarray:
+        weight -= weight.mean(axis=0, keepdims=True)
+        weight /= np.abs(weight).sum(axis=0, keepdims=True)
+        return weight
+
     def train(self, verbose: bool = True, mlflow_run: str = None):
         """
         Train Loop
@@ -130,8 +136,6 @@ class DDPGTrainer:
             action += np.random.normal(0, self.std, size=action.shape)
             # (num_tickers,)
             target_weight = obs["target_weight"] + action
-            target_weight -= target_weight.mean(axis=0, keepdims=True)
-            target_weight /= np.abs(target_weight).sum(axis=0, keepdims=True)
 
             # (num_tickers,)
             gap = target_weight - holding_weight
@@ -210,8 +214,6 @@ class DDPGTrainer:
             action = action.detach().squeeze(0).numpy()
             # Target Weight
             target_weight = obs["target_weight"] + action
-            target_weight -= target_weight.mean(axis=0, keepdims=True)
-            target_weight /= np.abs(target_weight).sum(axis=0, keepdims=True)
 
             gap = target_weight - holding_weight
             # Execution
