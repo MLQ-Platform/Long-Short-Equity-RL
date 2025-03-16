@@ -13,9 +13,10 @@ class Perturbation(nn.Module):
         self.config = config
         self.act = nn.ReLU()
         self.out = nn.Tanh()
-        self.l1 = nn.Linear(s_dim + a_dim, 400)
-        self.l2 = nn.Linear(400, 300)
-        self.l3 = nn.Linear(300, a_dim)
+
+        self.l1 = nn.Linear(s_dim + a_dim, 128)
+        self.l2 = nn.Linear(128, 64)
+        self.l3 = nn.Linear(64, a_dim)
 
     def forward(self, state: torch.Tensor, action: torch.Tensor):
         """
@@ -24,15 +25,15 @@ class Perturbation(nn.Module):
         """
         # (batch, num_tickers * 2)
         x = torch.cat([state, action], 1)
-        # (batch, 400)
+        # (batch, 128)
         x = self.act(self.l1(x))
-        # (batch, 300)
+        # (batch, 64)
         x = self.act(self.l2(x))
         # (batch, a_dim)
         p = self.out(self.l3(x))
 
         # (batch, a_dim)
-        purturb = self.config.action_scale * p
+        purturb = self.config.purturb_scale * p
         # (batch, a_dim)
         purturb_action = (action + purturb).clamp(-1.0, 1.0)
         return purturb_action

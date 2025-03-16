@@ -21,15 +21,15 @@ class VAE(nn.Module):
         self.out = nn.Tanh()
 
         # Layers for Encoder
-        self.e1 = nn.Linear(s_dim + a_dim, 750)
-        self.e2 = nn.Linear(750, 750)
-        self.mu = nn.Linear(750, z_dim)
-        self.log_std = nn.Linear(750, z_dim)
+        self.e1 = nn.Linear(s_dim + a_dim, 128)
+        self.e2 = nn.Linear(128, 128)
+        self.mu = nn.Linear(128, z_dim)
+        self.log_std = nn.Linear(128, z_dim)
 
         # Layers for Decoder
-        self.d1 = nn.Linear(s_dim + z_dim, 750)
-        self.d2 = nn.Linear(750, 750)
-        self.d3 = nn.Linear(750, a_dim)
+        self.d1 = nn.Linear(s_dim + z_dim, 128)
+        self.d2 = nn.Linear(128, 128)
+        self.d3 = nn.Linear(128, a_dim)
 
     def forward(self, state: torch.Tensor, action: torch.Tensor):
         """

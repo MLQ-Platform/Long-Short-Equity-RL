@@ -18,20 +18,20 @@ class Qnet(nn.Module):
 
         # First Qnet
         self.qnet1 = nn.Sequential(
-            nn.Linear(s_dim + a_dim, 400),
+            nn.Linear(s_dim + a_dim, 128),
             nn.ReLU(),
-            nn.Linear(400, 300),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(300, 1),
+            nn.Linear(64, 1),
         )
 
         # Second Qnet
         self.qnet2 = nn.Sequential(
-            nn.Linear(s_dim + a_dim, 400),
+            nn.Linear(s_dim + a_dim, 128),
             nn.ReLU(),
-            nn.Linear(400, 300),
+            nn.Linear(128, 64),
             nn.ReLU(),
-            nn.Linear(300, 1),
+            nn.Linear(64, 1),
         )
 
     def q1(self, state: torch.Tensor, action: torch.Tensor):
