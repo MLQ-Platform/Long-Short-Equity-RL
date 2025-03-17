@@ -1,7 +1,6 @@
 import torch
 import mlflow
 import numpy as np
-from datetime import datetime
 from dataclasses import dataclass
 
 # torch
