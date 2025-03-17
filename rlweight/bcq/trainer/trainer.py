@@ -13,7 +13,6 @@ from rlweight.bcq.model import Qnet
 from rlweight.bcq.model import Perturbation
 from rlweight.bcq.model import ModelConfig
 from rlweight.ddpg.trainer import ReplayBuffer
-from rlweight.utils import generate_uuid
 
 
 @dataclass
@@ -29,6 +28,7 @@ class TrainerConfig:
     num_tickers: int
     tau: float
     lam: float
+    experiment: str
 
 
 class BCQTrainer:
@@ -98,9 +98,8 @@ class BCQTrainer:
 
         # MLflow 설정
         if mlflow_run:
-            run_name = generate_uuid()
-            mlflow.set_experiment(mlflow_run)
-            mlflow.start_run(run_name=run_name)
+            mlflow.set_experiment(self.config.experiment)
+            mlflow.start_run(run_name=mlflow_run)
             mlflow.log_params(self.config.__dict__)
 
         for step in range(1, self.config.total_steps + 1):
@@ -180,6 +179,9 @@ class BCQTrainer:
                 print(f"  VAE Loss: {vae_loss.item():.6f}")
                 print(f"  Critic Loss: {critic_loss.item():.6f}")
                 print(f"  Perturb Loss: {perturb_loss.item():.6f}")
+
+        if mlflow_run:
+            mlflow.end_run()
 
     def _soft_update(self, net, target_net, tau):
         """
