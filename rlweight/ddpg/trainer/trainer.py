@@ -13,6 +13,7 @@ from rlweight.ddpg.model.actor import Actor
 from rlweight.ddpg.model.critic import Critic
 from rlweight.ddpg.model.config import ModelConfig
 from rlweight.ddpg.trainer.buffer import ReplayBuffer
+from rlweight.utils import generate_uuid
 
 # Env
 from rlweight.env.data import Data
@@ -115,7 +116,7 @@ class DDPGTrainer:
 
         # MLflow 설정
         if mlflow_run:
-            run_name = f"{self.config.__str__()}_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            run_name = generate_uuid()
             mlflow.set_experiment(mlflow_run)
             mlflow.start_run(run_name=run_name)
             mlflow.log_params(self.config.__dict__)
