@@ -135,6 +135,8 @@ class DDPGTrainer:
             action += np.random.normal(0, self.std, size=action.shape)
             # (num_tickers,)
             target_weight = obs["target_weight"] + action
+            # Abs Sum to One
+            target_weight = target_weight / np.abs(target_weight).sum()
 
             # (num_tickers,)
             gap = target_weight - holding_weight
@@ -213,6 +215,8 @@ class DDPGTrainer:
             action = action.detach().squeeze(0).numpy()
             # Target Weight
             target_weight = obs["target_weight"] + action
+            # Abs Sum to One
+            target_weight = target_weight / np.abs(target_weight).sum()
 
             gap = target_weight - holding_weight
             # Execution
