@@ -162,17 +162,6 @@ class DDPGTrainer:
                 sampled_data = self.buffer.sample(self.config.batch_size)
                 update_result = self._update(*sampled_data)
 
-                # MLflow 로깅
-                if mlflow_run:
-                    mlflow.log_metrics(
-                        {
-                            **update_result,
-                            "exploration_noise": self.std,
-                            "score": score,
-                        },
-                        step=steps,
-                    )
-
             # Exploration Noise Decay
             self.std *= self.std_decay
             # Step Up
@@ -188,6 +177,17 @@ class DDPGTrainer:
                 print(f"  Avg Value: {update_result['avg_value']:.6f}")
                 print(f"  Exploration Noise: {self.std:.6f}")
                 print(f"  Score: {score:.6f}")
+
+                # MLflow 로깅
+                if mlflow_run:
+                    mlflow.log_metrics(
+                        {
+                            **update_result,
+                            "exploration_noise": self.std,
+                            "score": score,
+                        },
+                        step=steps,
+                    )
 
         if mlflow_run:
             mlflow.end_run()

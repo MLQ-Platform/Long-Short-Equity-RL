@@ -163,22 +163,21 @@ class BCQTrainer:
             self._soft_update(self.perturbation, self.purturb_target, self.config.tau)
             self._soft_update(self.critic, self.critic_target, self.config.tau)
 
-            # MLflow 로깅
-            if mlflow_run:
-                mlflow.log_metrics(
-                    {
-                        "vae_loss": vae_loss.item(),
-                        "critic_loss": critic_loss.item(),
-                        "perturb_loss": perturb_loss.item(),
-                    },
-                    step=step,
-                )
-
             if verbose and step % 100 == 0:
                 print(f"\n[Step {step}/{self.config.total_steps}]")
                 print(f"  VAE Loss: {vae_loss.item():.6f}")
                 print(f"  Critic Loss: {critic_loss.item():.6f}")
                 print(f"  Perturb Loss: {perturb_loss.item():.6f}")
+
+                if mlflow_run:
+                    mlflow.log_metrics(
+                        {
+                            "vae_loss": vae_loss.item(),
+                            "critic_loss": critic_loss.item(),
+                            "perturb_loss": perturb_loss.item(),
+                        },
+                        step=step,
+                    )
 
         if mlflow_run:
             mlflow.end_run()
