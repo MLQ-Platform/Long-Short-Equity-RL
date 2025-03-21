@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from rlweight.ddpg.model.config import ModelConfig
 
 
@@ -26,3 +27,10 @@ class Actor(nn.Module):
         # (num_batch, num_tickers)
         act = self.config.action_scale * self.fc_module(state)
         return act
+
+    def from_numpy(self, state: np.ndarray) -> np.ndarray:
+        """
+        state: (num_tickers,)
+        """
+        state = torch.from_numpy(state).float().unsqueeze(0)
+        return self(state).detach().numpy().squeeze(0)

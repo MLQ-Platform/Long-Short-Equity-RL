@@ -1,6 +1,8 @@
 import torch
 import mlflow
 import numpy as np
+from typing import Optional
+from typing import Callable
 from dataclasses import dataclass
 
 # torch
@@ -16,6 +18,9 @@ from rlweight.ddpg.trainer.buffer import ReplayBuffer
 # Env
 from rlweight.env.data import Data
 from rlweight.env.eventenv import EventEnvConfig
+
+
+ActionMethod = Callable[[np.ndarray], np.ndarray]
 
 
 @dataclass
@@ -128,9 +133,7 @@ class DDPGTrainer:
             # (num_tickers,)
             holding_weight = obs["holding_weight"]
             # (1, num_tickers)
-            action = self.actor(self.to_tensor(state).unsqueeze(0))
-            # (num_tickers, )
-            action = action.detach().squeeze(0).numpy()
+            action = self.actor.from_numpy(state)
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
             # (num_tickers,)
@@ -192,10 +195,12 @@ class DDPGTrainer:
         if mlflow_run:
             mlflow.end_run()
 
-    def test(self) -> np.ndarray:
+    def test(self, action_method: Optional[ActionMethod] = None) -> np.ndarray:
         """
         Test Loop
         """
+        if action_method is None:
+            action_method = self.actor.from_numpy
 
         weights = []
         changes = []
@@ -211,8 +216,7 @@ class DDPGTrainer:
             # (num_tickers,)
             holding_weight = obs["holding_weight"]
             # Optimal Action
-            action = self.actor(self.to_tensor(state).unsqueeze(0))
-            action = action.detach().squeeze(0).numpy()
+            action = action_method(state)
             # Target Weight
             target_weight = obs["target_weight"] + action
             # Abs Sum to One
