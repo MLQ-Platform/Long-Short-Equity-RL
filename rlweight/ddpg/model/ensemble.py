@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 from typing import List
 from rlweight.ddpg.model.actor import Actor
 
@@ -24,3 +25,10 @@ class EnsembleActor(nn.Module):
         # (num_batch, num_actions)
         avg_action = torch.mean(actions, dim=0)
         return avg_action
+
+    def from_numpy(self, state: np.ndarray) -> np.ndarray:
+        """
+        state: (num_tickers,)
+        """
+        state = torch.from_numpy(state).float().unsqueeze(0)
+        return self(state).detach().numpy().squeeze(0)
