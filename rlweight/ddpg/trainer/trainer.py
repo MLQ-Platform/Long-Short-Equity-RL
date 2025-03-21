@@ -206,8 +206,6 @@ class DDPGTrainer:
         changes = []
         turnovers = []
 
-        self.actor.eval()
-
         obs = self.env.reset()
 
         while True:
@@ -233,8 +231,6 @@ class DDPGTrainer:
 
             if done:
                 break
-
-        self.actor.train()
 
         changes = np.array(changes)
         weights = np.array(weights)
