@@ -105,10 +105,8 @@ class DDPGTrainer:
         return torch.tensor(data).float()
 
     @staticmethod
-    def neutralize(weight: np.ndarray) -> np.ndarray:
-        weight -= weight.mean(axis=0, keepdims=True)
-        weight /= np.abs(weight).sum(axis=0, keepdims=True)
-        return weight
+    def state_map(state: np.ndarray) -> np.ndarray:
+        return np.log(state) - 0.51
 
     def train(self, verbose: bool = True, mlflow_run: str = None):
         """
@@ -129,7 +127,7 @@ class DDPGTrainer:
 
         while steps < self.config.total_steps:
             # (num_tickers,)
-            state = obs["target_vol"]
+            state = self.state_map(obs["target_vol"])
             # (num_tickers,)
             holding_weight = obs["holding_weight"]
             # (1, num_tickers)
@@ -146,7 +144,7 @@ class DDPGTrainer:
 
             # 환경 실행
             next_obs, reward, done, info = self.env.execute(obs, gap)
-            next_state = next_obs["target_vol"]
+            next_state = self.state_map(next_obs["target_vol"])
 
             # 배치 단위 트렌지션
             transition = (
@@ -210,7 +208,7 @@ class DDPGTrainer:
 
         while True:
             # (num_tickers,)
-            state = obs["target_vol"]
+            state = self.state_map(obs["target_vol"])
             # (num_tickers,)
             holding_weight = obs["holding_weight"]
             # Optimal Action
