@@ -5,6 +5,9 @@ from typing import Dict, Tuple
 from dataclasses import dataclass
 
 TICKER = str
+FACTOR = pd.DataFrame
+CHANGE = pd.DataFrame
+TARVOL = pd.DataFrame
 
 
 @dataclass
@@ -25,7 +28,7 @@ class DataTransformer:
 
     def transform(
         self, close_dict: Dict[TICKER, pd.Series], window: int, target_vol: float
-    ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    ) -> Tuple[FACTOR, CHANGE, TARVOL]:
         """
         Transform Data from close_dict
 
