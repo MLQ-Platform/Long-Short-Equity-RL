@@ -22,24 +22,22 @@ class DataTransformer:
         pass
 
     def transform(
-        self, ohlcv_list: List[pd.DataFrame], window: int, target_vol: float
+        self, close_list: List[pd.Series], window: int, target_vol: float
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Transform Data from OHLCVs
+        Transform Data from CLOSE series
 
-        ohlcv_list: 12h timeframe OHLCV data list
+        closes: 12h timeframe CLOSE series list
         """
         values = {}
         closes = {}
 
         # Calculate Sharpe Momentum Weight
-        for ohlcv in ohlcv_list:
-            sharpe_weight = self._calculate_sharpe_momentum_weight(
-                ohlcv.close, window=window
-            )
+        for close in close_list:
+            sharpe_weight = self._calculate_sharpe_momentum_weight(close, window=window)
 
-            values[ohlcv.name] = sharpe_weight
-            closes[ohlcv.name] = ohlcv.close
+            values[close.name] = sharpe_weight
+            closes[close.name] = close
 
         values = pd.DataFrame(values).dropna()
         closes = pd.DataFrame(closes).dropna()
