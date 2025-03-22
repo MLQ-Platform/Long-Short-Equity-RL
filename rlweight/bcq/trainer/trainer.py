@@ -163,7 +163,7 @@ class BCQTrainer:
             self._soft_update(self.perturbation, self.purturb_target, self.config.tau)
             self._soft_update(self.critic, self.critic_target, self.config.tau)
 
-            if verbose and step % 100 == 0:
+            if verbose and step % 500 == 0:
                 print(f"\n[Step {step}/{self.config.total_steps}]")
                 print(f"  VAE Loss: {vae_loss.item():.6f}")
                 print(f"  Critic Loss: {critic_loss.item():.6f}")

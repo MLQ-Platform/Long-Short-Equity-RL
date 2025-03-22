@@ -171,7 +171,7 @@ class DDPGTrainer:
             if done:
                 obs = self.env.reset()
 
-            if verbose and steps % 100 == 0:
+            if verbose and steps % 500 == 0:
                 print(f"\n[Step {steps}/{self.config.total_steps}]")
                 print(f"  Critic Loss: {update_result['critic_loss']:.6f}")
                 print(f"  Actor Loss: {update_result['actor_loss']:.6f}")
