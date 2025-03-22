@@ -1,8 +1,10 @@
 import math
 import numpy as np
 import pandas as pd
-from typing import List, Tuple
+from typing import Dict, Tuple
 from dataclasses import dataclass
+
+TICKER = str
 
 
 @dataclass
@@ -22,22 +24,23 @@ class DataTransformer:
         pass
 
     def transform(
-        self, close_list: List[pd.Series], window: int, target_vol: float
+        self, close_dict: Dict[TICKER, pd.Series], window: int, target_vol: float
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Transform Data from CLOSE series
+        Transform Data from close_dict
 
-        closes: 12h timeframe CLOSE series list
+        close_dict: {ticker:close_series}
         """
+
         values = {}
         closes = {}
 
         # Calculate Sharpe Momentum Weight
-        for close in close_list:
+        for ticker, close in close_dict.items():
             sharpe_weight = self._calculate_sharpe_momentum_weight(close, window=window)
 
-            values[close.name] = sharpe_weight
-            closes[close.name] = close
+            values[ticker] = sharpe_weight
+            closes[ticker] = close
 
         values = pd.DataFrame(values).dropna()
         closes = pd.DataFrame(closes).dropna()
