@@ -106,7 +106,7 @@ class DDPGTrainer:
 
     @staticmethod
     def state_map(state: np.ndarray) -> np.ndarray:
-        return np.log(state) - 0.51
+        return np.log(state) - 0.49
 
     def train(self, verbose: bool = True, mlflow_run: str = None):
         """
