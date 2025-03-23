@@ -47,8 +47,8 @@ class DataTransformer:
 
         values = pd.DataFrame(values).dropna()
         closes = pd.DataFrame(closes).dropna()
-        change = closes.pct_change(fill_method=None).shift(-1).dropna()
-        tarvol = target_vol / change.rolling(window).std().dropna()
+        change = closes.pct_change().shift(-1).dropna()
+        tarvol = target_vol / closes.pct_change().rolling(window).std().dropna()
 
         # Neutralize
         values = values.apply(lambda x: x - np.mean(x), axis=1)
