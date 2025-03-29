@@ -58,7 +58,7 @@ class EventEnv:
         next_obs:
             {
                 "target_vol": (num_tickers, ),
-                "target_weight": (num_tickers, ),
+                "factor_weight": (num_tickers, ),
                 "holding_weight": (num_tickers, ),
             }
 
