@@ -50,10 +50,6 @@ class DataTransformer:
         change = closes.pct_change().shift(-1).dropna()
         tarvol = target_vol / closes.pct_change().rolling(window).std().dropna()
 
-        # Neutralize
-        values = values.apply(lambda x: x - np.mean(x), axis=1)
-        values = values.apply(lambda x: x / np.abs(x).sum(), axis=1)
-
         # Indexing
         common_index = values.index.intersection(change.index)
         common_index = common_index.intersection(tarvol.index)

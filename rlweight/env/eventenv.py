@@ -30,7 +30,7 @@ class EventEnv:
         obs:
             {
                 "target_vol": (num_tickers, ),
-                "target_weight": (num_tickers, ),
+                "factor_weight": (num_tickers, ),
                 "holding_weight": (num_tickers, ),
             }
         """
@@ -38,15 +38,15 @@ class EventEnv:
         self._index = 0
 
         # (num_tickers, )
-        target_weight = self.data.factor[self._index]
+        factor_weight = self.data.factor[self._index]
         # (num_tickers, )
         target_vol = self.data.tarvol[self._index]
         # (num_tickers, )
-        holding_weight = np.zeros_like(target_weight, dtype=np.float32)
+        holding_weight = np.zeros_like(factor_weight, dtype=np.float32)
 
         obs = {
             "target_vol": target_vol.astype(np.float32),
-            "target_weight": target_weight.astype(np.float32),
+            "factor_weight": factor_weight.astype(np.float32),
             "holding_weight": holding_weight.astype(np.float32),
         }
         return obs
@@ -88,7 +88,7 @@ class EventEnv:
         self._index += 1
         target_vol = self.data.tarvol[self._index]
         # (num_tickers,)
-        target_weight = self.data.factor[self._index]
+        factor_weight = self.data.factor[self._index]
         # (num_tickers,)
         holding_weight = weight
         # (1, )
@@ -97,7 +97,7 @@ class EventEnv:
         next_obs = {
             # (num_tickers,)
             "target_vol": target_vol.astype(np.float32),
-            "target_weight": target_weight.astype(np.float32),
+            "factor_weight": factor_weight.astype(np.float32),
             "holding_weight": holding_weight.astype(np.float32),
         }
 

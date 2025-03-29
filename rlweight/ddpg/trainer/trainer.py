@@ -106,7 +106,7 @@ class DDPGTrainer:
 
     @staticmethod
     def state_map(state: np.ndarray) -> np.ndarray:
-        return np.log(state) - 0.49
+        return np.log(state) - 0.46
 
     def train(self, verbose: bool = True, mlflow_run: str = None):
         """
@@ -135,8 +135,9 @@ class DDPGTrainer:
             # Exploration Noise 추가
             action += np.random.normal(0, self.std, size=action.shape)
             # (num_tickers,)
-            target_weight = obs["target_weight"] + action
-            # Abs Sum to One
+            target_weight = obs["factor_weight"] + action
+            # Neutralize
+            target_weight = target_weight - np.mean(target_weight)
             target_weight = target_weight / np.abs(target_weight).sum()
 
             # (num_tickers,)
@@ -214,8 +215,9 @@ class DDPGTrainer:
             # Optimal Action
             action = action_method(state)
             # Target Weight
-            target_weight = obs["target_weight"] + action
-            # Abs Sum to One
+            target_weight = obs["factor_weight"] + action
+            # Neutralize
+            target_weight = target_weight - np.mean(target_weight)
             target_weight = target_weight / np.abs(target_weight).sum()
 
             gap = target_weight - holding_weight
