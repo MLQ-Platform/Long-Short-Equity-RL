@@ -17,7 +17,7 @@ class Actor(nn.Module):
             nn.Linear(128, 64),
             nn.ReLU(),
             nn.Linear(64, config.num_tickers),
-            nn.Sigmoid(),
+            nn.Tanh(),
         )
 
     def forward(self, state: torch.Tensor):
